@@ -40,7 +40,18 @@ DWORD WINAPI InjectionThread(HMODULE hmod)
 			*v_health = healthVal;
 			Sleep(1);	
 		}
-
+		if (GetKeyState(0x4a) & 0x8000)
+		{
+			maxAmmo = !maxAmmo;
+			std::cout << "Toggled Max ammo\n";
+			Sleep(500);
+		}
+		if (GetKeyState(0x4b) & 0x8000)
+		{
+			godMode = !godMode;
+			std::cout << "Toggled God Mode\n";
+			Sleep(500);
+		}
 		if (maxAmmo) {
 			uintptr_t ptr = modBase + 0x2074A4;
 			uintptr_t ammoAddr = FindDMAAddr(ptr , { 0x17c });
