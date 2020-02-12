@@ -1,2 +1,3 @@
 ﻿  dllmain.cpp
-  CubeDllInjection.vcxproj -> C:\Users\jmagi\source\repos\CubeDllInjection\Debug\CubeDllInjection.dll
+c:\users\jmagi\desktop\cube2internaltrainer\cubedllinjection\dllmain.cpp(50): warning C4018: '<=': signed/unsigned mismatch
+  CubeDllInjection.vcxproj -> C:\Users\jmagi\Desktop\Cube2InternalTrainer\Debug\CubeDllInjection.dll
