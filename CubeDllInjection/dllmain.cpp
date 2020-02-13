@@ -16,58 +16,87 @@ DWORD WINAPI InjectionThread(HMODULE hmod)
 	freopen_s(&f, "CONOUT$", "w", stdout);
 	uintptr_t modBase = (uintptr_t)GetModuleHandle(L"sauerbraten.exe");
 	
-	bool godMode = true;
-	bool maxAmmo = true;
-	std::cout << "In the injection thread\n";
+	bool godMode = false;
+	bool maxAmmo = false;
+	std::cout << "Cheat Menu:\n[J]: Toggles Max Ammo\n[K] Toggles God Mode\n";
+	std::cout << "All Cheats off...\n";
 
 	while (true)
 	{
 		// get address
-		uintptr_t pointer = modBase + 0x29D2C0;
-		uintptr_t visual = modBase + 0x2074A4;
-		int healthVal = 9999;
-		if (godMode)
-		{
-			uintptr_t addr = FindDMAAddr(pointer, { 0x0, 0x340 });
-			// create a pointer to the address we just found
-			int* health = (int*)addr;
-			//deref that pointer and fill health back up	
-			*health = healthVal;
 
-			// same thing but for the UI. Otherwise it would look like we have 100 instead of 9999
-			uintptr_t v_addr = FindDMAAddr(visual, { 0x15c });
-			int *v_health = (int*)v_addr;
-			*v_health = healthVal;
-			Sleep(1);	
-		}
+
 		if (GetKeyState(0x4a) & 0x8000)
 		{
 			maxAmmo = !maxAmmo;
-			std::cout << "Toggled Max ammo\n";
+			std::cout << "Toggled Max ammo: ";
+			if (maxAmmo) {
+				std::cout << "on\n";
+				// pointer static address that holds gun
+				uintptr_t pointer = modBase + 0x2074A4;
+
+				// The layout of memory here is odd. Starting at offset 0x17c, we have our first gun
+				// from there, there are 6 total guns. We need to fill each of these 6 addresses to get ammo in each possible weapon
+				// This is the first gun in inventory
+				uintptr_t ammoAddr = FindDMAAddr(pointer, { 0x17c });
+				// total number of guns in the game
+				int numGuns = 6;
+				//value to set ammo to
+				int ammoVal = 9999;
+
+				// iterate through each of the ammo spaces in memory
+				for (unsigned int i = 0; i <= numGuns; ++i)
+				{
+					// multiply our index by 4 to create the offset from ammoAddr and then add them together
+					uintptr_t currentAddr = ammoAddr + i * 4;
+					
+					//Create ptr, deref, set equal to ammoVal
+					int *ammo = (int*)currentAddr;
+					*ammo = ammoVal;
+				}
+
+			}
+			else 
+			{
+				std::cout << "off\n";
+			}
 			Sleep(500);
 		}
+
 		if (GetKeyState(0x4b) & 0x8000)
 		{
 			godMode = !godMode;
-			std::cout << "Toggled God Mode\n";
+			std::cout << "Toggled God Mode: ";
+			if (godMode)
+			{
+				std::cout << "on\n";
+				// pointer to the entity class
+				uintptr_t pointer = modBase + 0x29D2C0;
+				// pointer to the gui
+				uintptr_t visual_pointer = modBase + 0x2074A4;
+
+				// value we will replace our health with
+				int healthVal = 9999;
+
+				// get the health addr from the pointer
+				uintptr_t addr = FindDMAAddr(pointer, { 0x0, 0x340 });
+				// create a pointer to the address we just found
+				int* health = (int*)addr;
+				//deref that pointer and and fill with health
+				*health = healthVal;
+
+				// same thing but for the UI. Otherwise on the injection, our health would still show 100 until we were hit
+				// and the ui was written to by the entity
+				uintptr_t v_addr = FindDMAAddr(visual_pointer, { 0x15c });
+				int *v_health = (int*)v_addr;
+				*v_health = healthVal;
+				}
+			else
+			{
+				std::cout << "off\n";
+			}
 			Sleep(500);
 		}
-		if (maxAmmo) {
-			uintptr_t ptr = modBase + 0x2074A4;
-			uintptr_t ammoAddr = FindDMAAddr(ptr , { 0x17c });
-			// total number of guns in the game
-			int numGuns = 6;
-			int ammoVal = 9999;
-			for (unsigned int i = 0; i <= numGuns; ++i)
-			{
-				uintptr_t currentAddr = ammoAddr + i*4;
-				int *ammo = (int*)currentAddr;
-				*ammo = ammoVal;
-				
-			}
-
-		}
-
 	}
 
 	fclose(f);
